@@ -15,7 +15,8 @@ function App() {
   function fetchFoolishFridge(): void {
 
     console.log("Vi är i funktionen");
-    fetch("https://oyster-app-6w8rt.ondigitalocean.app/FoolishFridge")
+    fetch("http://localhost:8080/FoolishFridge")
+      //fetch("https://oyster-app-6w8rt.ondigitalocean.app/FoolishFridge")
       .then(res => res.json())
       .then((data: FoolishFridge[]) => {
         setLastTime(data[data.length - 1].time);
