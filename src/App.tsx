@@ -103,7 +103,7 @@ function App() {
 
   const BuyAccsessButton = () => {
     const handleClick = async () => {
-      const response: Response = await fetch("http://localhost:8080/api/checkout", {
+      const response: Response = await fetch("https://oyster-app-6w8rt.ondigitalocean.app/api/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
