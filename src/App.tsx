@@ -23,58 +23,40 @@ function App() {
 
 
   async function fetchFoolishFridge() {
-    const result = await fetch("http://localhost:8080/FoolishFridge")
-    //const result = await fetch("https://oyster-app-6w8rt.ondigitalocean.app/FoolishFridge")
-    const data = await result.json()
+    // const result = await fetch("http://localhost:8080/FoolishFridge")
+    const result = await fetch("https://oyster-app-6w8rt.ondigitalocean.app/FoolishFridge");
+    const data: FoolishFridge[] = await result.json();
 
-    const dataArray: FoolishFridge[] = data;
+    if (data && foolishfridgeArray[foolishfridgeArray.length - 1].id !== data[data.length - 1].id) {
+      data.reverse();
 
-    console.log("Det senaste IDt: " + foolishfridgeArray[foolishfridgeArray.length - 1].id);
-    console.log("IDT som kom in: " + dataArray[dataArray.length - 1].id);
-
-    if (dataArray && foolishfridgeArray[foolishfridgeArray.length - 1].id !== dataArray[dataArray.length - 1].id) {
-      console.log("Det sista IDt är inte samma för foolishFridgeArray och dataArray, och dataArray existerar");
-
-      if (dataArray.find(dataArray => dataArray.warning === 1 || 2)) {
-        const lastWarning: FoolishFridge = dataArray.reverse().find(dataArray => dataArray.warning == 1)!;
-        console.log("Sista varningiens datum: " + lastWarning.dateTime);
+      if (data.find(data => data.warning === 1 || 2)) {
+        const lastWarning: FoolishFridge = data.find(data => data.warning == 1)!;
         setFoolishFridgeWithWarning(lastWarning);
       }
-
-      if (dataArray.find(dataArray => dataArray.warning === 0)) {
-        const lastNonWarning: FoolishFridge = dataArray.reverse().find(dataArray => dataArray.warning == 0)!;
-        console.log("Sista icke-varningiens datum: " + lastNonWarning.dateTime);
+      if (data.find(data => data.warning === 0)) {
+        const lastNonWarning: FoolishFridge = data.find(data => data.warning == 0)!;
         setFoolishFridgeWithoutWarning(lastNonWarning);
       }
-      setFoolishFridgeArray(dataArray);
-
-      // if (foolishfridgeArray[1].id.length > 3) {
-      //   checkIfFoolishFridgeIsOpenNow()
-      // }
+      setFoolishFridgeArray(data.reverse());
     }
+    checkIfFoolishFridgeIsOpenNow();
   }
-
 
 
 
   async function checkIfFoolishFridgeIsOpenNow() {
     if (foolishfridgeArray[foolishfridgeArray.length - 1].warning === 1) {
       setActiveWarning(true);
-      console.log("Toköppet");
 
     } else if (foolishfridgeArray[foolishfridgeArray.length - 1].warning === 0 || 2) {
-      alert("Kylskåpet är stängt")
       setActiveWarning(false);
-      console.log("nope det är stängt");
-
-    } else {
-      console.log("Something is wrong");
     }
   }
 
   async function fetchLastNonWarningMessage(lastNonWarning: FoolishFridge) {
-    //const response = await fetch("https://oyster-app-6w8rt.ondigitalocean.app/Fetch/AiMessage",{
-    const response = await fetch("http://localhost:8080/Fetch/AiMessage", {
+    const response = await fetch("https://oyster-app-6w8rt.ondigitalocean.app/Fetch/AiMessage", {
+      //const response: Response = await fetch("http://localhost:8080/Fetch/AiMessage", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -84,13 +66,13 @@ function App() {
         "prompt": lastNonWarning
       })
     });
-    const data = await response.text();
+    const data: string = await response.text();
     setLastNonWarningMessage(data);
   }
 
   async function fetchLastWarningMessage(lastWarning: FoolishFridge) {
-    //  const response = await fetch("https://oyster-app-6w8rt.ondigitalocean.app/Fetch/AiMessage",{
-    const response = await fetch("http://localhost:8080/Fetch/AiMessage", {
+    const response = await fetch("https://oyster-app-6w8rt.ondigitalocean.app/Fetch/AiMessage", {
+      // const response: Response = await fetch("http://localhost:8080/Fetch/AiMessage", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -100,23 +82,24 @@ function App() {
         "prompt": lastWarning
       })
     })
-    const data = await response.text();
-    setLastWarningMessage(data)
+    const data: string = await response.text();
+    setLastWarningMessage(data);
   }
-
 
   useEffect(() => {
     fetchFoolishFridge();
   }, []);
 
+  useEffect(() => {
+    getAiMessages()
+  }, [foolishfridgeArray]);
 
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const interval: number = setInterval(async () => {
       await fetchFoolishFridge();
-    }, 10000);
+    }, 300000);  // Calling the server every 5th minute to save money on server costs. Re-write from an interval to some sort of websocket solution to make it much faster and cheaper.
     return () => clearInterval(interval);
-  }, [])
-
+  }, [foolishfridgeArray]);
 
   const BuyAccsessButton = () => {
     const handleClick = async () => {
@@ -138,30 +121,23 @@ function App() {
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
-    console.log("Boop");
-
     if (query.has("success")) {
-      setAccess(true)
-
+      setAccess(true);
     }
     if (query.has("fail")) {
-      setAccess(false)
-
+      setAccess(false);
     }
   }, []);
 
   function getAiMessages() {
     if (foolishfridgeArray.find(foolishfridge => foolishfridge.warning === 0)) {
-      fetchLastNonWarningMessage(foolishFridgeWithoutWarning!)
-      console.log(foolishfridgeArray.find(foolishfridge => foolishfridge.warning === 0));
+      fetchLastNonWarningMessage(foolishFridgeWithoutWarning!);
     }
 
     if (foolishfridgeArray.find(foolishfridge => foolishfridge.warning === 1)) {
-      fetchLastWarningMessage(foolishFridgeWithWarning!)
-      console.log(foolishfridgeArray.find(foolishfridge => foolishfridge.warning === 1));
+      fetchLastWarningMessage(foolishFridgeWithWarning!);
     }
   }
-
 
   return (
     <>
@@ -170,26 +146,25 @@ function App() {
           {activeWarning === true ?
             <div>
               <h1>****   Kylen är öppen   ****</h1>
-              <button onClick={checkIfFoolishFridgeIsOpenNow}>Är kylen fortfarande öppen?</button>
             </div>
             :
             <div>
-              <h2>Senste varningen: </h2>
+              <h1>****   Kylen är stängd   ****</h1>
+              <h2>Senste öppning med varning: </h2>
               <h3> {foolishFridgeWithWarning?.dateTime}</h3>
               <p> {lastWarningMessage}</p>
-              <h2>Senaste icke-varningen: </h2>
+              <h2>Senaste öppning utan varning: </h2>
               <h3>{foolishFridgeWithoutWarning?.dateTime}</h3>
               <p>{lastNonWarningMessage}</p>
-              <button onClick={getAiMessages}> AI</button>
-              <button onClick={checkIfFoolishFridgeIsOpenNow}>Glömde jag stänga?</button>
-
-              <p>{foolishFridgeWithWarning?.id}</p>
-
             </div>}
-
         </div>
         :
-        <BuyAccsessButton />}
+        <div>
+          <h1>Foolish Fridge</h1>
+          <BuyAccsessButton />
+        </div>
+
+      }
     </>
   )
 }
